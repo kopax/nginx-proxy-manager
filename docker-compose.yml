@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  app:
+    image: 'jc21/nginx-proxy-manager:latest'
+    networks:
+      - cont    
+    environment:
+      DISABLE_IPV6: "true"
+    restart: unless-stopped
+    ports:
+      - '880:80'
+      - '881:81'
+      - '4443:443'
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+
+networks:
+  cont:
+    driver:  bridge
+    enable_ipv6: false

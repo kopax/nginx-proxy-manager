@@ -1,0 +1,50 @@
+name: Deployment
+
+concurrency:
+  group: letort
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      marathon-proto:
+        type: choice
+        description: marathon protocol
+        required: false
+        options:
+          - https
+          - http
+      marathon-ip:
+        type: string
+        description: marathon ip or domain
+        required: false
+      marathon-port:
+        type: string
+        description: marathon port
+        required: false
+      marathon-secret:
+        type: string
+        description: marathon secret
+        required: false
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    environment: letort
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get marathon Bash deploy util
+        env:
+          MARATHON_BASH_UTIL_URL: ${{ vars.MARATHON_BASH_UTIL_URL }}
+        run:  curl -SL ${MARATHON_BASH_UTIL_URL} -o /usr/local/bin/marathon && chmod +x /usr/local/bin/marathon
+      - name: Deploy
+        env:
+          MARATHON_PROTO: ${{ inputs.marathon-proto || vars.MARATHON_PROTO }}
+          MARATHON_PORT: ${{ inputs.marathon-port || vars.MARATHON_PORT }}
+          MARATHON_IP: ${{ inputs.marathon-ip || vars.MARATHON_IP }}
+          MARATHON_SECRET: ${{ inputs.marathon-secret || secrets.MARATHON_SECRET }}
+          MARATHON_TYPE: apps
+        run: marathon deploy_letort.json update

@@ -1,0 +1,96 @@
+{
+  "id": "/kopaxgroup/public/nginx-proxy-manager",
+  "cpus": 0.1,
+  "mem": 128.0,
+  "instances": 1,
+  "labels": {
+    "nginx-letort": "",
+    "letort": "",
+    "nginx-letort-kopaxgroup-com": "",
+    "prod": ""
+  },
+  "env": {
+    "SERVICE_880_NAME": "prod-nginx-letort-http-kopaxgroup-com",
+    "SERVICE_880_TAGS": "prod-nginx-letort-http-kopaxgroup-com,haproxy",
+    "SERVICE_4443_NAME": "prod-nginx-letort-https-kopaxgroup-com",
+    "SERVICE_4443_TAGS": "prod-nginx-letort-https-kopaxgroup-com,haproxy",
+    "SERVICE_881_NAME": "prod-nginx-letort-admin-kopaxgroup-com",
+    "SERVICE_881_TAGS": "prod-nginx-letort-admin-kopaxgroup-com,haproxy",
+    "SERVER_ENV": "prod"
+  },
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "forcePullImage": true,
+      "image": "jc21/nginx-proxy-manager:latest",
+      "network": "BRIDGE",
+      "parameters": [
+        { "key": "add-host", "value": "master-letort-01:192.168.1.101" },
+        { "key": "add-host", "value": "master-letort-02:192.168.1.102" },
+        { "key": "add-host", "value": "master-letort-03:192.168.1.103" }
+      ],
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 0,
+          "name": "http",
+          "protocol": "tcp"
+        },
+        {
+          "containerPort": 443,
+          "hostPort": 31443,
+          "name": "https",
+          "protocol": "tcp"
+        },
+        {
+          "containerPort": 81,
+          "hostPort": 31481,
+          "name": "admin",
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "volumes": [
+      {
+        "containerPath": "/data",
+        "hostPath": "/srv/nas/kopaxgroup/nginx-proxy-manager/data",
+        "mode": "RW"
+      },
+      {
+        "containerPath": "/etc/letsencrypt",
+        "hostPath": "/srv/nas/kopaxgroup/nginx-proxy-manager/etc/letsencrypt",
+        "mode": "RW"
+      }
+    ]
+  },
+  "uris": [
+    "file:///etc/docker.tar.gz"
+  ],
+  "upgradeStrategy": {
+    "minimumHealthCapacity": 0,
+    "maximumOverCapacity": 0
+  },
+  "readinessChecks": [
+    {
+      "name": "readinessCheck",
+      "protocol": "HTTP",
+      "path": "/",
+      "portName": "http",
+      "intervalSeconds": 30,
+      "timeoutSeconds": 10,
+      "httpStatusCodesForReady": [200],
+      "preserveLastResponse": false
+    }
+  ],
+  "healthChecks": [
+    {
+      "path": "/",
+      "portName": "http",
+      "protocol": "HTTP",
+      "gracePeriodSeconds": 30,
+      "intervalSeconds": 10,
+      "timeoutSeconds": 30,
+      "maxConsecutiveFailures": 3
+    }
+  ]
+}
